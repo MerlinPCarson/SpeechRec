@@ -102,6 +102,7 @@ def main():
     parser.add_argument("-ws", "--windowsize", help="windowsize, num samples for FFT", type=int, default=512)
     parser.add_argument("-mf", "--nummelfilters", help="number of melfilters", type=int, default=40)
     parser.add_argument("-mfcc", "--nummfccs", help="number of MFCCs to keep", type=int, default=10)
+    parser.add_argument("-sg", "--showgraphs", help="show graphs for each feature transformation", action="store_true")
     parser.add_argument("-df", "--datafile", help="URL for dataset", default="http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz")
     arg = parser.parse_args()
 
@@ -117,15 +118,16 @@ def main():
     windowsize = arg.windowsize
     num_melfilters = arg.nummelfilters
     num_mfccs = arg.nummfccs
+    showgraphs = arg.showgraphs
 
     # Gets data from source and converts to specified samplerate
     setup_data(datafile, datadir, words, samplerate)
 
     # Generates dataset from wav files containing specified words 
     data_generator = DataGenerator(datadir, words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs)
-    x_train_vec, y_train_vec = data_generator.convert_wavs_to_dataset()
+    x_train_vec, y_train_vec = data_generator.convert_wavs_to_dataset(showgraphs)
 
-    print(x_train_vec.shape, y_train_vec.shape)
+    #print(x_train_vec.shape, y_train_vec.shape)
 
     # Saves dataset to disk
     save_dataset_to_hdf5(datasetfile, x_train_vec, y_train_vec)
@@ -133,7 +135,7 @@ def main():
     # Loads dataset from disk
     x_train, y_train = load_dataset_from_hdf5(datasetfile)
 
-    print(x_train.shape, y_train.shape)
+    #print(x_train.shape, y_train.shape)
     # Verifies consistance of dataset generated and saved
     assert x_train_vec.shape == x_train.shape and y_train_vec.shape == y_train.shape, "Mismatch between generated data and data saved to disk!"    
 

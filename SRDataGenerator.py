@@ -2,8 +2,70 @@ import os
 import glob
 import numpy as np
 import soundfile as sf
+import matplotlib.pyplot as plt
 from scipy.fftpack import dct
 from tqdm import tqdm
+
+def plot_wave(samples):
+    plt.figure()
+    plt.title('Audio')
+    plt.plot(samples)
+    plt.xlabel('time steps')
+    plt.ylabel('amplitude')
+    plt.grid(True)
+
+def plot_spectra(mags, freqs):
+    plt.figure()
+    plt.title('Spectrum')
+    plt.plot(freqs, mags[0])
+    plt.xlabel('frequency')
+    plt.ylabel('magnitude')
+    plt.grid(True)
+
+def plot_power(powers, freqs):
+    plt.figure()
+    plt.title('Power Spectrum')
+    plt.imshow(powers.T, aspect='auto', extent=[0,freqs[-1],0,powers.max()])
+    plt.xlabel('frequency')
+    plt.ylabel('power')
+    plt.grid(True)
+
+def plot_filters(fbank, samplerate, windowsize):
+    plt.figure()
+    plt.title('Mel Filters')
+    xdata = np.array((range(windowsize//2+1)), dtype='float')
+    xdata *= samplerate/windowsize
+    for i in range(fbank.shape[0]):
+        plt.plot(xdata, fbank[i,:])
+    plt.xlabel('frequency')
+    plt.ylabel('amplitude')
+    plt.grid(True)
+
+def plot_mels(mels, samplerate, length):
+    plt.figure()
+    plt.title('Mel Spectra')
+    plt.imshow(mels.T, aspect='auto', extent=[0, length/samplerate, samplerate//2, 0])
+    plt.xlabel('time (s)')
+    plt.ylabel('frequency')
+    plt.grid(True)
+
+def plot_mfccs(mfccs, samplerate, length):
+    plt.figure()
+    plt.title('MFCC coeffecients')
+    plt.imshow(mfccs.T, aspect='auto', extent=[0, length/samplerate, mfccs.shape[1], 0])
+    plt.xlabel('time (s)')
+    plt.ylabel('coeffecients')
+    plt.grid(True)
+
+def plot_data(samples, mags, powers, mels, mfccs, freqs, filters, samplerate, windowsize):
+
+    plot_wave(samples)
+    plot_spectra(mags, freqs)
+    plot_power(powers, freqs)
+    plot_filters(filters, samplerate, windowsize)
+    plot_mels(mels, samplerate, len(samples))
+    plot_mfccs(mfccs, samplerate, len(samples))
+    plt.show()
 
 class DataGenerator():
 
@@ -78,7 +140,7 @@ class DataGenerator():
         filter_banks = np.where(filter_banks == 0, np.finfo(float).eps, filter_banks)  # Numerical Stability
         filter_banks = 20 * np.log10(filter_banks)  # dB
 
-        return filter_banks
+        return filter_banks, fbank
 
 
     def mels_to_mfccs(self, filter_banks):
@@ -94,7 +156,7 @@ class DataGenerator():
         return mfccs
         
 
-    def convert_wavs_to_dataset(self):
+    def convert_wavs_to_dataset(self, showgraphs):
 
         x_train_vec = None
         y_train_vec = []
@@ -124,9 +186,13 @@ class DataGenerator():
 
             power_spectrum = self.mag_to_power(magnitudes)
 
-            mel_spectrum = self.power_to_mel(power_spectrum)
+            mel_spectrum, filters = self.power_to_mel(power_spectrum)
 
             mfccs = self.mels_to_mfccs(mel_spectrum)    
+
+            # show graphs for all transformations, for debugging/testing 
+            if showgraphs: 
+                plot_data(samples, magnitudes, power_spectrum, mel_spectrum, mfccs, freqs, filters, self.samplerate, self.windowsize)
 
             # setup empty array on first iteration, since we don't know the dimensions before hand
             if(x_train_vec is None):
