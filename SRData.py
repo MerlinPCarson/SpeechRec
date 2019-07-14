@@ -1,12 +1,12 @@
 import os, sys, time
 import glob
-import subprocess
-#from scipy import signal
-from librosa.core import resample
-import soundfile as sf
-import argparse
 import h5py
+import argparse
+import subprocess
+import numpy as np
+import soundfile as sf
 from tqdm import tqdm
+from librosa.core import resample
 from SRDataGenerator import DataGenerator
 
 def verify_words(words, datadir):
@@ -72,18 +72,29 @@ def setup_data(datafile, datadir, words, samplerate):
    
 def save_dataset_to_hdf5(datasetfile, x_train_vec, y_train_vec):
 
+    print(f'Saving dataset to {datasetfile}')
     with h5py.File(datasetfile, 'w') as hf:
         hf.create_dataset('x_train', data = x_train_vec, chunks=True)
         hf.create_dataset('y_train', data = y_train_vec, chunks=True)
 
- 
+
+def load_dataset_from_hdf5(datasetfile):
+
+    print(f'Loading dataset from {datasetfile}')
+    with h5py.File(datasetfile, 'r') as hf:
+        x_train = hf['x_train']
+        y_train = hf['y_train']
+
+        return np.array(x_train, dtype='float32'), np.array(y_train, dtype='uint8')
+        
+        
 def main():
     print(f"Speech Recognition Data Generation starting at {time.ctime()}")
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-dd", "--datadir", help="root directory of data", default="data")
-    parser.add_argument("-ds", "--datasetfile", help="HDF5 file for dataset", default="SRdata.h5")
+    parser.add_argument("-ds", "--datasetfile", help="HDF5 file for dataset", default="SRData.h5")
     parser.add_argument("-w", "--words", help="specifies which words to include in data set: <--wordss <word1, word2, ...>", nargs='+', default=['yes','no'])
     parser.add_argument("-sr", "--samplerate", help="audio sample rate", type=int, default=8000)
     parser.add_argument("-pe", "--preemphasis", help="preemphasis coeffecient", type=int, default=.97)
@@ -107,15 +118,26 @@ def main():
     num_melfilters = arg.nummelfilters
     num_mfccs = arg.nummfccs
 
+    # Gets data from source and converts to specified samplerate
     setup_data(datafile, datadir, words, samplerate)
 
+    # Generates dataset from wav files containing specified words 
     data_generator = DataGenerator(datadir, words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs)
     x_train_vec, y_train_vec = data_generator.convert_wavs_to_dataset()
 
     print(x_train_vec.shape, y_train_vec.shape)
 
+    # Saves dataset to disk
     save_dataset_to_hdf5(datasetfile, x_train_vec, y_train_vec)
 
+    # Loads dataset from disk
+    x_train, y_train = load_dataset_from_hdf5(datasetfile)
+
+    print(x_train.shape, y_train.shape)
+    # Verifies consistance of dataset generated and saved
+    assert x_train_vec.shape == x_train.shape and y_train_vec.shape == y_train.shape, "Mismatch between generated data and data saved to disk!"    
+
+    print(f'Dataset Generation Complete at {time.ctime()}')
 
 if __name__ == '__main__':
     main()

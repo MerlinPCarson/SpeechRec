@@ -104,6 +104,7 @@ class DataGenerator():
         # load all wave files in words directory, enumerate so we can set target vector to the number of element in words list
         wav_files = [(num,f) for num, word in enumerate(self.words) for f in glob.glob(os.path.join('data', word,'*.wav'))]
 
+        print('Generating dataset')
         # process all wave files for specified words
         for wav_file in tqdm(wav_files):
             samples, sr = sf.read(wav_file[1])
@@ -136,7 +137,7 @@ class DataGenerator():
             y_train_vec.append(wav_file[0])    # target is first element in tuple from enumeration
 
 
-        print(x_train_vec.shape)
-        print(len(y_train_vec), y_train_vec)
+        #print(x_train_vec.shape)
+        #print(len(y_train_vec), y_train_vec)
 
         return x_train_vec, np.array(y_train_vec, dtype='uint8').reshape(len(y_train_vec), 1)
