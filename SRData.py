@@ -55,7 +55,7 @@ def set_samplerate(datadir, words, samplerate):
     print(f'All Data sampled at {samplerate} Hz')
    
  
-def setup_data(datafile, datadir, words, samplerate):
+def setup_data(datafile, datadir, words, other_words, samplerate):
  
     file_name = os.path.basename(datafile)
     
@@ -68,6 +68,7 @@ def setup_data(datafile, datadir, words, samplerate):
     verify_words(words, datadir)
 
     set_samplerate(datadir, words, samplerate) 
+    set_samplerate(datadir, other_words, samplerate) 
 
    
 def save_dataset_to_hdf5(datasetfile, x_train_vec, y_train_vec):
@@ -87,7 +88,12 @@ def load_dataset_from_hdf5(datasetfile):
 
         return np.array(x_train, dtype='float32'), np.array(y_train, dtype='uint8')
         
-        
+       
+def get_other_words(words, datadir):
+    word_dirs = [os.path.basename(dir) for dir in glob.glob('data/*') if os.path.isdir(dir)] 
+    other_words = set(word_dirs) - set(words)
+    return list(other_words)
+
 def main():
     print(f"Speech Recognition Data Generation starting at {time.ctime()}")
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -112,6 +118,10 @@ def main():
     datafile = arg.datafile
     datasetfile = arg.datasetfile
     words = arg.words
+    print(words)
+    other_words = get_other_words(words, datadir)
+    print(other_words)
+    #assert False, 'end program'
     samplerate = arg.samplerate
     preemphasis = arg.preemphasis
     framesize = arg.framesize
@@ -121,10 +131,10 @@ def main():
     showgraphs = arg.showgraphs
 
     # Gets data from source and converts to specified samplerate
-    setup_data(datafile, datadir, words, samplerate)
+    setup_data(datafile, datadir, words, other_words, samplerate)
 
     # Generates dataset from wav files containing specified words 
-    data_generator = DataGenerator(datadir, words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs)
+    data_generator = DataGenerator(datadir, words, other_words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs)
     x_train_vec, y_train_vec = data_generator.convert_wavs_to_dataset(showgraphs)
 
     #print(x_train_vec.shape, y_train_vec.shape)

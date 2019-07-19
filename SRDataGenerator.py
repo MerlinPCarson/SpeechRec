@@ -69,11 +69,12 @@ def plot_data(samples, mags, powers, mels, mfccs, freqs, filters, samplerate, wi
 
 class DataGenerator():
 
-    def __init__(self, datadir, words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs):
+    def __init__(self, datadir, words, other_words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs):
         self.datadir = datadir
         self.samplerate = samplerate
         self.preemphasis = preemphasis
         self.words = words
+        self.other_words = other_words
         self.framesize = framesize
         self.windowsize = windowsize
         self.num_melfilters = num_melfilters
@@ -156,6 +157,15 @@ class DataGenerator():
         return mfccs
         
 
+    def clip_samples(samples, samplerate):
+        if len(samples) < self.samplerate:
+            samples = np.append(samples, np.zeros(self.samplerate-len(samples)))    # pad shorter wav files with 0s
+        elif len(samples) > self.samplerate:
+            samples = samples[:samplerate]
+
+        return samples
+        
+
     def convert_wavs_to_dataset(self, showgraphs):
 
         x_train_vec = None
@@ -171,13 +181,12 @@ class DataGenerator():
         for wav_file in tqdm(wav_files):
             samples, sr = sf.read(wav_file[1])
 
-            # check length of wav file 
-            if len(samples) != self.samplerate:
-                samples = np.append(samples, np.zeros(self.samplerate-len(samples)))    # pad shorter wav files with 0s
-
             # verify file is correct samplerate
             if sr != self.samplerate:
                 samples = resample(samples, sr, self.samplerate)
+
+            # check length of wav file 
+            samples = self.clip_samples(samples, samplerate)
 
             # shift audio to higher frequencies
             samples = self.pre_emphasis(samples)
