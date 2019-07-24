@@ -118,10 +118,10 @@ def main():
     datafile = arg.datafile
     datasetfile = arg.datasetfile
     words = arg.words
-    print(words)
+    print(f' Using words {words}')
+    # any words not specified should be used as training 'other' category
     other_words = get_other_words(words, datadir)
-    print(other_words)
-    #assert False, 'end program'
+    print(f' Using words {other_words} as unknown words')
     samplerate = arg.samplerate
     preemphasis = arg.preemphasis
     framesize = arg.framesize
@@ -131,7 +131,7 @@ def main():
     showgraphs = arg.showgraphs
 
     # Gets data from source and converts to specified samplerate
-    setup_data(datafile, datadir, words, other_words, samplerate)
+    #setup_data(datafile, datadir, words, other_words, samplerate)
 
     # Generates dataset from wav files containing specified words 
     data_generator = DataGenerator(datadir, words, other_words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs)
