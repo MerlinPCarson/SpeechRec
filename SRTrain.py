@@ -28,19 +28,21 @@ def model_dense(batchSize, numNeurons, timesteps, num_features, outputs):
     model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
 
-def model_conv(batchSize, numNeurons, outputs, freqBins):
+def model_conv(batchSize, numNeurons, time_steps, num_features, outputs):
     regVal = 0.0001
-    x_in = Input(batch_shape=(None, 4, freqBins))
+    x_in = Input(batch_shape=(None, time_steps, num_features))
     x = Convolution1D(128, 2, activation='relu')(x_in)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x)
+    x = MaxPooling1D(pool_size=2)(x)
     x = Convolution1D(64, 2, activation='relu')(x)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x)
+    x = MaxPooling1D(pool_size=2)(x)
     x = Convolution1D(32, 2, activation='relu')(x)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x)
-#    x = MaxPooling1D(pool_size=2)(x)
+    x = MaxPooling1D(pool_size=2)(x)
     x = Flatten()(x)
     x = Dense(numNeurons, activation='relu')(x)
     x = Dense(outputs, activation='softmax', kernel_regularizer=regularizers.l2(regVal), bias_regularizer=regularizers.l2(regVal))(x)
@@ -70,7 +72,8 @@ def model_rnn(batchSize, numNeurons, outputs, freqBins):
 
 def main():
     datasetfile = 'SRData.h5'
-    words = ['yes', 'no']
+    #words = ['yes', 'no', 'one', 'two']
+    words = ['yes', 'no', 'up', 'down', 'left', 'right', 'on', 'off', 'stop', 'go']
     num_neurons = 256
     batch_size = 32
     epochs = 100
@@ -83,7 +86,8 @@ def main():
 
     x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.15, shuffle=True )
 
-    SpeechRecog = model_dense(batch_size, num_neurons, x_train.shape[1], x_train.shape[2], len(words))
+    #SpeechRecog = model_dense(batch_size, num_neurons, x_train.shape[1], x_train.shape[2], len(words))
+    SpeechRecog = model_conv(batch_size, num_neurons, x_train.shape[1], x_train.shape[2], len(words))
     SpeechRecog.summary()
 
     modelFile = 'SpeechRecog.h5'
