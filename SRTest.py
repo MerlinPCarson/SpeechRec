@@ -4,6 +4,7 @@ from playsound import playsound
 from random import randint
 from gtts import gTTS
 from SRDataGenerator import DataGenerator
+from rec import rec_and_clip
 import sys
 import numpy as np
 
@@ -23,8 +24,9 @@ def write_phrase(pred, filename):
  
 def main():
     words = ['yes', 'no', 'up', 'down', 'left', 'right', 'on', 'off', 'stop', 'go', 'other']
-    wav_file = sys.argv[1]
+    wav_file = 'input-clip.wav' #sys.argv[1]
     pred_filename = 'pred.mp3'
+    rec_and_clip()
     print(f'Using file {wav_file}') 
 
     data_generator = DataGenerator('data', [], [], 8000, 0.97, .024, 512, 40, 10)
