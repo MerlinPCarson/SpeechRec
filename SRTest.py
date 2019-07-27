@@ -4,27 +4,27 @@ from playsound import playsound
 from random import randint
 from gtts import gTTS
 from SRDataGenerator import DataGenerator
-from rec import rec_and_clip
+from SRRec import rec_and_clip
 import sys
 import numpy as np
 
 phrases = ['I predict you said ', 'Did you say ']
-incorrect = "I don't know that word"
+unknown = "I don't know that word"
 
 def write_phrase(pred, filename):
     if pred == 'other':
-        phrase = incorrect
+        phrase = unknown 
     else:
-        phrase = phrases[randint(0,len(phrases)-1)]
+        phrase = phrases[randint(0,len(phrases)-1)] + pred
    
-    tts = gTTS(phrase + pred)
+    tts = gTTS(phrase)
     tts.save('pred.mp3')
 
     
  
 def main():
     words = ['yes', 'no', 'up', 'down', 'left', 'right', 'on', 'off', 'stop', 'go', 'other']
-    wav_file = 'input-clip.wav' #sys.argv[1]
+    wav_file = 'input.wav' #sys.argv[1]
     pred_filename = 'pred.mp3'
     rec_and_clip()
     print(f'Using file {wav_file}') 
