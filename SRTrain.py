@@ -73,7 +73,7 @@ def model_rnn(batchSize, numNeurons, outputs, freqBins):
 def main():
     datasetfile = 'SRData.h5'
     #words = ['yes', 'no', 'one', 'two']
-    words = ['yes', 'no', 'up', 'down', 'left', 'right', 'on', 'off', 'stop', 'go']
+    words = ['yes', 'no', 'up', 'down', 'left', 'right', 'on', 'off', 'stop', 'go', 'other']
     num_neurons = 256
     batch_size = 32
     epochs = 100

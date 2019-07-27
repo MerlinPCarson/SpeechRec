@@ -131,7 +131,7 @@ def main():
     showgraphs = arg.showgraphs
 
     # Gets data from source and converts to specified samplerate
-    #setup_data(datafile, datadir, words, other_words, samplerate)
+    setup_data(datafile, datadir, words, other_words, samplerate)
 
     # Generates dataset from wav files containing specified words 
     data_generator = DataGenerator(datadir, words, other_words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs)

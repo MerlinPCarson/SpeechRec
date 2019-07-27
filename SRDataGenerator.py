@@ -171,7 +171,7 @@ class DataGenerator():
 
     def wav_to_vector(self, wav_file, showgraphs=False):
 
-        samples, sr = sf.read(wav_file[1])
+        samples, sr = sf.read(wav_file)
 
         # verify file is correct samplerate
         if sr != self.samplerate:
@@ -211,7 +211,7 @@ class DataGenerator():
         for wav_file in tqdm(word_wav_files):
 
             # convert a wave file to a data vector
-            mfccs = self.wav_to_vector(wav_file, showgraphs)
+            mfccs = self.wav_to_vector(wav_file[1], showgraphs)
 
             # setup empty array on first iteration, since we don't know the dimensions before hand
             if(x_train_vec is None):
