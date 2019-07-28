@@ -3,6 +3,7 @@ import glob
 import h5py
 import argparse
 import subprocess
+import pickle
 import numpy as np
 import soundfile as sf
 from tqdm import tqdm
@@ -44,18 +45,16 @@ def set_samplerate(datadir, words, samplerate):
 
     print(f'Verifying data is at {samplerate} Hz')
     for wav_file in tqdm(wav_files):
-        #print('Checking Samplerate for file:', wav_file)
         samples, sr = sf.read(wav_file)
         
         if sr != samplerate:
-            #print('Resampling file ', wav_file, 'from', sr, 'to', samplerate)
             samples = resample(samples, sr, samplerate)
             sf.write(wav_file, samples, samplerate)    
         
     print(f'All Data sampled at {samplerate} Hz')
    
  
-def setup_data(datafile, datadir, words, other_words, samplerate):
+def setup_data(datafile, datadir, words, samplerate):
  
     file_name = os.path.basename(datafile)
     
@@ -68,7 +67,7 @@ def setup_data(datafile, datadir, words, other_words, samplerate):
     verify_words(words, datadir)
 
     set_samplerate(datadir, words, samplerate) 
-    set_samplerate(datadir, other_words, samplerate) 
+    #set_samplerate(datadir, other_words, samplerate) 
 
    
 def save_dataset_to_hdf5(datasetfile, x_train_vec, y_train_vec):
@@ -94,6 +93,13 @@ def get_other_words(words, datadir):
     other_words = set(word_dirs) - set(words)
     return list(other_words)
 
+
+def params_dict(words, samplerate, preemphasis, framesize, windowsize, num_mels, num_mfccs):
+    
+    params = {'Words': words, 'SampleRate': samplerate, 'Preemphasis': preemphasis, 'Framesize': framesize, 'Windowsize': windowsize, 'NumMels': num_mels, 'NumMFCCS': num_mfccs}
+    return params
+
+
 def main():
     print(f"Speech Recognition Data Generation starting at {time.ctime()}")
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -102,6 +108,7 @@ def main():
     parser.add_argument("-dd", "--datadir", help="root directory of data", default="data")
     parser.add_argument("-ds", "--datasetfile", help="HDF5 file for dataset", default="SRData.h5")
     parser.add_argument("-w", "--words", help="specifies which words to include in data set: <--wordss <word1, word2, ...>", nargs='+', default=['yes','no'])
+    parser.add_argument("-o", "--others", help="specifies using all other words as unknown", action="store_true")
     parser.add_argument("-sr", "--samplerate", help="audio sample rate", type=int, default=8000)
     parser.add_argument("-pe", "--preemphasis", help="preemphasis coeffecient", type=int, default=.97)
     parser.add_argument("-fs", "--framesize", help="framesize, audio context in FFT window", type=int, default=.024)
@@ -120,8 +127,14 @@ def main():
     words = arg.words
     print(f' Using words {words}')
     # any words not specified should be used as training 'other' category
-    other_words = get_other_words(words, datadir)
-    print(f' Using words {other_words} as unknown words')
+
+    others = arg.others
+    if others == True:
+        other_words = get_other_words(words, datadir)
+        print(f' Using words {other_words} as unknown words')
+    else:
+        other_words = []
+
     samplerate = arg.samplerate
     preemphasis = arg.preemphasis
     framesize = arg.framesize
@@ -131,7 +144,17 @@ def main():
     showgraphs = arg.showgraphs
 
     # Gets data from source and converts to specified samplerate
-    setup_data(datafile, datadir, words, other_words, samplerate)
+    setup_data(datafile, datadir, words, samplerate)
+
+    if others == True:
+        setup_data(datafile, datadir, other_words, samplerate)
+        words.append('other')
+
+    # save parameters for loading into train and test script
+    params = params_dict(words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs)
+    print(params)
+    with open('params.npy', 'wb') as paramfile:
+        pickle.dump(params, paramfile)    
 
     # Generates dataset from wav files containing specified words 
     data_generator = DataGenerator(datadir, words, other_words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs)

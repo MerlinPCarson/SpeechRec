@@ -1,4 +1,6 @@
 import pickle
+import time
+import numpy as np
 from sklearn.model_selection import train_test_split
 # Keras packages model
 from keras.models import Sequential, Model, load_model
@@ -71,9 +73,15 @@ def model_rnn(batchSize, numNeurons, outputs, freqBins):
 
 
 def main():
+    print(f"Speech Recognition Training starting at {time.ctime()}")
     datasetfile = 'SRData.h5'
     #words = ['yes', 'no', 'one', 'two']
-    words = ['yes', 'no', 'up', 'down', 'left', 'right', 'on', 'off', 'stop', 'go', 'other']
+    with open('params.npy', 'rb') as paramfile:
+        params = pickle.load(paramfile)
+        words = params['Words']
+
+    print(f'Training on words: {words}')
+    #words = ['yes', 'no', 'up', 'down', 'left', 'right', 'on', 'off', 'stop', 'go', 'other']
     num_neurons = 256
     batch_size = 32
     epochs = 100
@@ -86,17 +94,39 @@ def main():
 
     x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.15, shuffle=True )
 
+    std = np.std(x_train)
+    mean = np.mean(x_train)
+    print(f'Training set standard deviation: {std}')
+    print(f'Training set mean: {mean}')
+
+    # add mean and standard deviation to parameter file
+    params = {}
+    with open('params.npy', 'rb') as paramfile:
+        params = pickle.load(paramfile)
+
+    params['Std'] = std
+    params['Mean'] = mean
+
+    with open('params.npy', 'wb') as paramfile:
+        pickle.dump(params, paramfile)
+
+    x_train = (x_train - mean)/std 
+    x_valid = (x_valid - mean)/std
+    
     #SpeechRecog = model_dense(batch_size, num_neurons, x_train.shape[1], x_train.shape[2], len(words))
     SpeechRecog = model_conv(batch_size, num_neurons, x_train.shape[1], x_train.shape[2], len(words))
     SpeechRecog.summary()
 
     modelFile = 'SpeechRecog.h5'
     bestModelCheckpoint = ModelCheckpoint(modelFile, save_best_only=True)
+    earlyStopping = EarlyStopping(patience=2)
     
-    model_history = SpeechRecog.fit(x_train, y_train, validation_data=(x_valid, y_valid), batch_size=batch_size, epochs=epochs, callbacks=[bestModelCheckpoint])
+    model_history = SpeechRecog.fit(x_train, y_train, validation_data=(x_valid, y_valid), batch_size=batch_size, epochs=epochs, callbacks=[bestModelCheckpoint, earlyStopping])
 
     with open(modelFile.replace('.h5', '.npy'), "wb") as outfile:
         pickle.dump(model_history.history, outfile)
+
+    print(f'Training Complete at {time.ctime()}')
 
 if __name__ == '__main__':
     main()

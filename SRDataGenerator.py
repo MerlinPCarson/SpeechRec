@@ -74,7 +74,6 @@ class DataGenerator():
         self.samplerate = samplerate
         self.preemphasis = preemphasis
         self.words = words
-        self.words.append('other')
         self.other_words = other_words
         #words_wav_files = [(num,f) for num, word in enumerate(self.words) for f in glob.glob(os.path.join('data', word,'*.wav'))]
         #other_words_wav_files = [(self.words.index('other'),f) for word in self.other_words for f in glob.glob(os.path.join('data', word,'*.wav'))]
@@ -204,7 +203,7 @@ class DataGenerator():
         # process all wave files for specified words
         for wav_file in tqdm(word_wav_files):
 
-            samples, sr = sf.read(wav_file)
+            samples, sr = sf.read(wav_file[1])
 
             # verify file is correct samplerate
             if sr != self.samplerate:
