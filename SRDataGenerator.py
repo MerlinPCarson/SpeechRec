@@ -169,13 +169,7 @@ class DataGenerator():
         return samples
         
 
-    def wav_to_vector(self, wav_file, showgraphs=False):
-
-        samples, sr = sf.read(wav_file)
-
-        # verify file is correct samplerate
-        if sr != self.samplerate:
-            samples = resample(samples, sr, self.samplerate)
+    def samples_to_vector(self, samples, showgraphs=False):
 
         # check length of wav file 
         samples = self.clip_samples(samples, self.samplerate)
@@ -210,15 +204,21 @@ class DataGenerator():
         # process all wave files for specified words
         for wav_file in tqdm(word_wav_files):
 
+            samples, sr = sf.read(wav_file)
+
+            # verify file is correct samplerate
+            if sr != self.samplerate:
+                samples = resample(samples, sr, self.samplerate)
+
             # convert a wave file to a data vector
-            mfccs = self.wav_to_vector(wav_file[1], showgraphs)
+            feature_vec = self.samples_to_vector(samples, showgraphs)
 
             # setup empty array on first iteration, since we don't know the dimensions before hand
             if(x_train_vec is None):
-                x_train_vec = np.empty((0,mfccs.shape[0], mfccs.shape[1]))
+                x_train_vec = np.empty((0, feature_vec.shape[0], feature_vec.shape[1]))
 
-            #print(x_train_vec.shape, mfccs.shape, len(samples), wav_file[1])
-            x_train_vec = np.vstack((x_train_vec, mfccs.reshape(1,mfccs.shape[0],mfccs.shape[1])))
+            #print(x_train_vec.shape, feature_vec.shape, len(samples), wav_file[1])
+            x_train_vec = np.vstack((x_train_vec, feature_vec.reshape(1, feature_vec.shape[0], feature_vec.shape[1])))
             y_train_vec.append(wav_file[0])    # target is first element in tuple from enumeration
 
        # load all wave files in words notin directory, set target vector to the number of element in words list
@@ -229,13 +229,13 @@ class DataGenerator():
         for wav_file in tqdm(other_words_wav_files):
 
             # convert a wave file to a data vector
-            mfccs = self.wav_to_vector(wav_file, showgraphs)
+            feature_vec = self.wav_to_vector(wav_file, showgraphs)
             # setup empty array on first iteration, since we don't know the dimensions before hand
             if(x_train_vec is None):
-                x_train_vec = np.empty((0,mfccs.shape[0], mfccs.shape[1]))
+                x_train_vec = np.empty((0, feature_vec.shape[0], feature_vec.shape[1]))
 
-            #print(x_train_vec.shape, mfccs.shape, len(samples), wav_file[1])
-            x_train_vec = np.vstack((x_train_vec, mfccs.reshape(1,mfccs.shape[0],mfccs.shape[1])))
+            #print(x_train_vec.shape, feature_vec.shape, len(samples), wav_file[1])
+            x_train_vec = np.vstack((x_train_vec, feature_vec.reshape(1, feature_vec.shape[0], feature_vec.shape[1])))
             y_train_vec.append(wav_file[0])    # target is first element in tuple from enumeration
 
         #print(x_train_vec.shape)
