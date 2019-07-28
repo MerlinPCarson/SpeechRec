@@ -33,20 +33,20 @@ def model_dense(batchSize, numNeurons, timesteps, num_features, outputs):
 def model_conv(batchSize, numNeurons, time_steps, num_features, outputs):
     regVal = 0.0001
     x_in = Input(batch_shape=(None, time_steps, num_features))
-    x = Convolution1D(128, 2, activation='relu')(x_in)
+    x = Convolution1D(128, 2, activation='relu', kernel_regularization=regularizers.l2(regVal), bias_regularizer=regularizers.l2(regVal))(x_in)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x)
     x = MaxPooling1D(pool_size=2)(x)
-    x = Convolution1D(64, 2, activation='relu')(x)
+    x = Convolution1D(64, 2, activation='relu', kernel_regularization=regularizers.l2(regVal), bias_regularizer=regularizers.l2(regVal))(x)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x)
     x = MaxPooling1D(pool_size=2)(x)
-    x = Convolution1D(32, 2, activation='relu')(x)
+    x = Convolution1D(32, 2, activation='relu', kernel_regularization=regularizers.l2(regVal), bias_regularizer=regularizers.l2(regVal))(x)
     x = BatchNormalization()(x)
     x = Dropout(0.4)(x)
     x = MaxPooling1D(pool_size=2)(x)
     x = Flatten()(x)
-    x = Dense(numNeurons, activation='relu')(x)
+    x = Dense(numNeurons, activation='relu', kernel_regularization=regularizers.l2(regVal), bias_regularizer=regularizers.l2(regVal))(x)
     x = Dense(outputs, activation='softmax', kernel_regularizer=regularizers.l2(regVal), bias_regularizer=regularizers.l2(regVal))(x)
     model = Model(inputs=[x_in], outputs=[x])
     model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -119,7 +119,7 @@ def main():
 
     modelFile = 'SpeechRecog.h5'
     bestModelCheckpoint = ModelCheckpoint(modelFile, save_best_only=True)
-    earlyStopping = EarlyStopping(patience=2)
+    earlyStopping = EarlyStopping(patience=5)
     
     model_history = SpeechRecog.fit(x_train, y_train, validation_data=(x_valid, y_valid), batch_size=batch_size, epochs=epochs, callbacks=[bestModelCheckpoint, earlyStopping])
 

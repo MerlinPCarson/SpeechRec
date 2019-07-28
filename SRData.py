@@ -13,9 +13,7 @@ from SRDataGenerator import DataGenerator
 def verify_words(words, datadir):
 
     for word in words:
-        if os.path.isdir(os.path.join(datadir, word)):
-            print(f'Using word "{word}"')
-        else:
+        if not os.path.isdir(os.path.join(datadir, word)):
             print(f'Word "{word}" not found in dataset')
             sys.exit('Failed to build dataset')
 
@@ -104,10 +102,12 @@ def main():
     print(f"Speech Recognition Data Generation starting at {time.ctime()}")
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
+    words = ['yes', 'no', 'up', 'down', 'left', 'right', 'on', 'off', 'stop', 'go']
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-dd", "--datadir", help="root directory of data", default="data")
     parser.add_argument("-ds", "--datasetfile", help="HDF5 file for dataset", default="SRData.h5")
-    parser.add_argument("-w", "--words", help="specifies which words to include in data set: <--wordss <word1, word2, ...>", nargs='+', default=['yes','no'])
+    parser.add_argument("-w", "--words", help="specifies which words to include in data set: <--wordss <word1, word2, ...>", nargs='+', default=words)
     parser.add_argument("-o", "--others", help="specifies using all other words as unknown", action="store_true")
     parser.add_argument("-sr", "--samplerate", help="audio sample rate", type=int, default=8000)
     parser.add_argument("-pe", "--preemphasis", help="preemphasis coeffecient", type=int, default=.97)
@@ -126,7 +126,6 @@ def main():
     datasetfile = arg.datasetfile
     words = arg.words
     print(f' Using words {words}')
-    # any words not specified should be used as training 'other' category
 
     others = arg.others
     if others == True:
@@ -144,9 +143,11 @@ def main():
     showgraphs = arg.showgraphs
 
     # Gets data from source and converts to specified samplerate
+    print('Verifying known words')
     setup_data(datafile, datadir, words, samplerate)
 
     if others == True:
+        print('Verifying unknown words')
         setup_data(datafile, datadir, other_words, samplerate)
         words.append('other')
 
