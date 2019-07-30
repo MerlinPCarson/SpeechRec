@@ -69,11 +69,14 @@ def plot_data(samples, mags, powers, mels, mfccs, freqs, filters, samplerate, wi
 
 class DataGenerator():
 
-    def __init__(self, datadir, words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs):
+    def __init__(self, datadir, words, other_words, samplerate, preemphasis, framesize, windowsize, num_melfilters, num_mfccs):
         self.datadir = datadir
         self.samplerate = samplerate
         self.preemphasis = preemphasis
         self.words = words
+        self.other_words = other_words
+        #words_wav_files = [(num,f) for num, word in enumerate(self.words) for f in glob.glob(os.path.join('data', word,'*.wav'))]
+        #other_words_wav_files = [(self.words.index('other'),f) for word in self.other_words for f in glob.glob(os.path.join('data', word,'*.wav'))]
         self.framesize = framesize
         self.windowsize = windowsize
         self.num_melfilters = num_melfilters
@@ -156,52 +159,83 @@ class DataGenerator():
         return mfccs
         
 
-    def convert_wavs_to_dataset(self, showgraphs):
+    def clip_samples(self, samples, samplerate):
+        if len(samples) < self.samplerate:
+            samples = np.append(samples, np.zeros(self.samplerate-len(samples)))    # pad shorter wav files with 0s
+        elif len(samples) > self.samplerate:
+            samples = samples[:samplerate]
+
+        return samples
+        
+
+    def samples_to_vector(self, samples, showgraphs=False):
+
+        # check length of wav file 
+        samples = self.clip_samples(samples, self.samplerate)
+
+        # shift audio to higher frequencies
+        samples = self.pre_emphasis(samples)
+
+        magnitudes, freqs = self.time_to_freq(samples) 
+
+        power_spectrum = self.mag_to_power(magnitudes)
+
+        mel_spectrum, filters = self.power_to_mel(power_spectrum)
+
+        mfccs = self.mels_to_mfccs(mel_spectrum)    
+                
+        # show graphs for all transformations, for debugging/testing 
+        if showgraphs: 
+            plot_data(samples, magnitudes, power_spectrum, mel_spectrum, mfccs, freqs, filters, self.samplerate, self.windowsize)
+
+        return mfccs
+
+
+    def convert_wavs_to_dataset(self, showgraphs=False):
 
         x_train_vec = None
         y_train_vec = []
 
-        # only check samplerate for files in word list
-        #wav_files = [f for word in words for f in glob.glob(os.path.join('data', word,'*.wav'))] 
         # load all wave files in words directory, enumerate so we can set target vector to the number of element in words list
-        wav_files = [(num,f) for num, word in enumerate(self.words) for f in glob.glob(os.path.join('data', word,'*.wav'))]
+        word_wav_files = [(num,f) for num, word in enumerate(self.words) for f in glob.glob(os.path.join('data', word,'*.wav'))]
 
-        print('Generating dataset')
+        print('Generating word dataset')
         # process all wave files for specified words
-        for wav_file in tqdm(wav_files):
-            samples, sr = sf.read(wav_file[1])
+        for wav_file in tqdm(word_wav_files):
 
-            # check length of wav file 
-            if len(samples) != self.samplerate:
-                samples = np.append(samples, np.zeros(self.samplerate-len(samples)))    # pad shorter wav files with 0s
+            samples, sr = sf.read(wav_file[1])
 
             # verify file is correct samplerate
             if sr != self.samplerate:
                 samples = resample(samples, sr, self.samplerate)
 
-            # shift audio to higher frequencies
-            samples = self.pre_emphasis(samples)
-
-            magnitudes, freqs = self.time_to_freq(samples) 
-
-            power_spectrum = self.mag_to_power(magnitudes)
-
-            mel_spectrum, filters = self.power_to_mel(power_spectrum)
-
-            mfccs = self.mels_to_mfccs(mel_spectrum)    
-
-            # show graphs for all transformations, for debugging/testing 
-            if showgraphs: 
-                plot_data(samples, magnitudes, power_spectrum, mel_spectrum, mfccs, freqs, filters, self.samplerate, self.windowsize)
+            # convert a wave file to a data vector
+            feature_vec = self.samples_to_vector(samples, showgraphs)
 
             # setup empty array on first iteration, since we don't know the dimensions before hand
             if(x_train_vec is None):
-                x_train_vec = np.empty((0,mfccs.shape[0], mfccs.shape[1]))
+                x_train_vec = np.empty((0, feature_vec.shape[0], feature_vec.shape[1]))
 
-            #print(x_train_vec.shape, mfccs.shape, len(samples), wav_file[1])
-            x_train_vec = np.vstack((x_train_vec, mfccs.reshape(1,mfccs.shape[0],mfccs.shape[1])))
+            #print(x_train_vec.shape, feature_vec.shape, len(samples), wav_file[1])
+            x_train_vec = np.vstack((x_train_vec, feature_vec.reshape(1, feature_vec.shape[0], feature_vec.shape[1])))
             y_train_vec.append(wav_file[0])    # target is first element in tuple from enumeration
 
+       # load all wave files in words notin directory, set target vector to the number of element in words list
+        other_words_wav_files = [(self.words.index('other'),f) for word in self.other_words for f in glob.glob(os.path.join('data', word,'*.wav'))]
+
+        print('Generating non-word dataset')
+        # process all wave files for non-specified words
+        for wav_file in tqdm(other_words_wav_files):
+
+            # convert a wave file to a data vector
+            feature_vec = self.wav_to_vector(wav_file, showgraphs)
+            # setup empty array on first iteration, since we don't know the dimensions before hand
+            if(x_train_vec is None):
+                x_train_vec = np.empty((0, feature_vec.shape[0], feature_vec.shape[1]))
+
+            #print(x_train_vec.shape, feature_vec.shape, len(samples), wav_file[1])
+            x_train_vec = np.vstack((x_train_vec, feature_vec.reshape(1, feature_vec.shape[0], feature_vec.shape[1])))
+            y_train_vec.append(wav_file[0])    # target is first element in tuple from enumeration
 
         #print(x_train_vec.shape)
         #print(len(y_train_vec), y_train_vec)
