@@ -12,11 +12,11 @@ from SRDataGenerator import DataGenerator
 
 class Predictor():
 
-    def  __init__(self):
+    def  __init__(self, modelfile):
         # setup predictor params
         self.pred_filename = 'pred.mp3'
         self.recordtime = 3 # in seconds
-        self.model_file = 'SpeechRecog.h5' 
+        self.model_file = modelfile 
         self.param_file = 'params.npy'
         self.phrases = ['I predict you said ', 'Did you say ', 'I think you said ', 'Sounded like ', 'I believe you spoke ']
         self.unknown = ["I don't know that word", "I didn't understand you", "Please try again", "I didn't hear you, can you please speak up"]
@@ -33,8 +33,8 @@ class Predictor():
         self.windowsize = params['Windowsize'] 
         self.nummels = params['NumMels'] 
         self.nummfccs = params['NumMFCCS'] 
-        self.std = params['Std']
-        self.mean = params['Mean']
+        #self.std = params['Std']
+        #self.mean = params['Mean']
 
         # create predictor and model object
         self.data_generator = DataGenerator(None, [], [], self.samplerate, self.preemphasis, self.framesize, self.windowsize, self.nummels, self.nummfccs)
@@ -71,7 +71,7 @@ class Predictor():
         test_data = self.data_generator.samples_to_vector(samples, showgraphs=False)
    
         # standardize input vector
-        test_data = (test_data - self.mean) / self.std 
+        #test_data = (test_data - self.mean) / self.std 
 
         preds = self.model.predict(np.expand_dims(test_data, axis=0))
     
