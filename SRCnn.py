@@ -2,6 +2,7 @@ import matplotlib as plt
 from SRData import load_dataset_from_hdf5
 from sklearn.model_selection import train_test_split
 import pickle
+import numpy as np
 
 from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau 
 from keras.layers import BatchNormalization, Dense, Flatten, Dropout, Input
@@ -17,8 +18,11 @@ MULTIHEAD_MODEL_FILE = 'SRMultiHeadModel.h5'
 HISTORY_FILE = 'SBTrainHistoryDict'
 SOURCE_DATA_FILE = 'SRData.h5'
 
+NORMALIZE = False
+STANDARDIZE = True
+
 EPOCHS = 1000
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 ADAM_LEARNING_RATE = 0.00001
 VERBOSE = 1
 
@@ -27,8 +31,22 @@ VERBOSE = 1
 def load_data():
     x_train, y_train = load_dataset_from_hdf5(SOURCE_DATA_FILE)
 
+
     # split the data into training and validation sets, 90/10
     x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.1) 
+
+    if STANDARDIZE:
+        x_train_mean = np.mean(x_train)
+        x_train_std = np.std(x_train)
+        x_train = (x_train-x_train_mean)/x_train_std
+        x_valid = (x_valid-x_train_mean)/x_train_std
+
+    if NORMALIZE:
+        x_train_max = np.max(x_train)
+        x_train_min = np.min(x_train)
+        x_train = (x_train-x_train_min)/(x_train_max-x_train_min)
+        x_valid = (x_valid-x_train_min)/(x_train_max-x_train_min)
+
 
     # one-hot encode target values
     y_train = to_categorical(y_train)
@@ -45,14 +63,16 @@ def evaluate_model(x_train, x_valid, y_train, y_valid, load_mod, show_plots):
         n_timesteps, n_features, n_outputs = x_train.shape[1], x_train.shape[2], y_train.shape[1]
         model=Sequential()
         # Input convolutional layer
-        model.add(Conv1D(filters=32, kernel_size=7, activation='relu', input_shape=(n_timesteps, n_features)))
+        model.add(Conv1D(filters=64, kernel_size=4, activation='relu', input_shape=(n_timesteps, n_features)))
         model.add(BatchNormalization())
         # Dropout layer, randomly removes p percentage of values, helps with overfitting
-        model.add(Dropout(0.55))
+        model.add(Dropout(0.15))
+        # model.add(MaxPooling1D(pool_size=2))
+
         # Second convolutional layer
-        model.add(Conv1D(filters=32, kernel_size=7, activation='relu'))
+        model.add(Conv1D(filters=64, kernel_size=4, activation='relu'))
         model.add(BatchNormalization())
-        model.add(Dropout(0.55))
+        model.add(Dropout(0.15))
         # Pooling layer to remove noise
         model.add(MaxPooling1D(pool_size=2))
         # Flatten convolution out to attach to dense NN
@@ -65,8 +85,8 @@ def evaluate_model(x_train, x_valid, y_train, y_valid, load_mod, show_plots):
         # opt=Adam(lr=ADAM_LEARNING_RATE)  # Using if we want to set the initial learning rate value
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         
-    reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=20, min_lr=1e-8, cooldown=25, verbose=1, epsilon=1e-4, mode='min')
-    earlyStopping = EarlyStopping(monitor='val_loss', patience=75, verbose=0, mode='min')
+    reduce_lr_loss = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=25, min_lr=1e-8, cooldown=25, verbose=1, epsilon=1e-4, mode='min')
+    earlyStopping = EarlyStopping(monitor='val_loss', patience=75, verbose=1, mode='min')
     mcp_save = ModelCheckpoint(MODEL_FILE, save_best_only=True, monitor='val_loss', mode='min')
     model.summary()
 	
