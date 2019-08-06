@@ -33,8 +33,8 @@ class Predictor():
         self.windowsize = params['Windowsize'] 
         self.nummels = params['NumMels'] 
         self.nummfccs = params['NumMFCCS'] 
-        #self.std = params['Std']
-        #self.mean = params['Mean']
+        self.std = params['Std']
+        self.mean = params['Mean']
 
         # create predictor and model object
         self.data_generator = DataGenerator(None, [], [], self.samplerate, self.preemphasis, self.framesize, self.windowsize, self.nummels, self.nummfccs)
@@ -71,7 +71,7 @@ class Predictor():
         test_data = self.data_generator.samples_to_vector(samples, showgraphs=False)
    
         # standardize input vector
-        #test_data = (test_data - self.mean) / self.std 
+        test_data = (test_data - self.mean) / self.std 
 
         preds = self.model.predict(np.expand_dims(test_data, axis=0))
     
