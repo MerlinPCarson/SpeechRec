@@ -8,6 +8,7 @@ from gtts import gTTS
 from tqdm import tqdm
 from keras.models import load_model
 from SRDataGenerator import DataGenerator
+import subprocess
 
 
 class Predictor():
@@ -79,8 +80,9 @@ class Predictor():
         print(f'\nPrediction is {pred}\n') 
         self.write_phrase(pred)
     
-        playsound(self.pred_filename)
-   
+        # playsound(self.pred_filename)
+        rtnVal = subprocess.call(['afplay', self.pred_filename])
+
  
     def rec_and_clip(self):
     
