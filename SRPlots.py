@@ -1,8 +1,11 @@
 import matplotlib.pyplot as plt
 import pickle
+import sys
 
-dataFile = 'SpeechRecog.npy'
-data = pickle.load(open(dataFile, "rb"))
+historyfile = sys.argv[1]
+
+#dataFile = 'SpeechRecog.npy'
+data = pickle.load(open(historyfile, "rb"))
 
 plt.figure('loss')
 plt.plot(data['loss'])
