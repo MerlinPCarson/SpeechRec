@@ -6,7 +6,7 @@
 
 # Install a pip package in the current Jupyter kernel
 import sys
-get_ipython().system('{sys.executable} -m pip install wavefile --user')
+#get_ipython().system('{sys.executable} -m pip install wavefile --user')
 
 
 # In[1]:

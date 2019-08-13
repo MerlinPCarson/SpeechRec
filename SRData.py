@@ -25,7 +25,7 @@ def download_data(datafile, datadir):
 
     file_name = os.path.basename(datafile)
     print('Downloading', file_name)
-    rtnVal = subprocess.call(['wget', datafile, '-P', datadir])
+    rtnVal = subprocess.call(['wget', datafile, '-P', datadir],shell=True)
     assert rtnVal == 0, 'downloaded failed!'
     print(file_name, 'downloaded successfully')
     
