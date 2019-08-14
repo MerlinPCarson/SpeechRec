@@ -79,9 +79,11 @@ class Predictor():
         pred = self.words[np.argmax(preds)]
         print(f'\nPrediction is {pred}\n') 
         self.write_phrase(pred)
-    
-        # playsound(self.pred_filename)
-        rtnVal = subprocess.call(['afplay', self.pred_filename])
+   
+        # for Linux playback 
+        playsound(self.pred_filename)
+        # for MaxOS playback
+        #rtnVal = subprocess.call(['afplay', self.pred_filename])
 
  
     def rec_and_clip(self):
