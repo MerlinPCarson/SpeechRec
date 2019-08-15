@@ -3,14 +3,31 @@
 
   - Purpose
   
-  Inquire and explore steps in the data scientist pipeline including: data wrangling, data cleaning, and predictive modeling with AI. We   will use the Speech Recognition data set, found on Kaggle.com, in order to build an algorithm that recognizes simple speech commands. 
+  >><p>Inquire and explore steps in the data scientist pipeline including: data wrangling, data cleaning, and predictive modeling with AI. We   will use the Speech Recognition data set, found on Kaggle.com, in order to build an algorithm that recognizes simple speech commands. </p>
 
   - Objective
   
-  Learn Command Words:
-    Yes, No, Up, Down, Left, Right, On, Off, Stop, Go
+  >><p>Learn Command Words: Yes, No, Up, Down, Left, Right, On, Off, Stop, Go</p>
 
-# Data
+# Dataset Generation
+  Downloads Tensorflow Speech Recognition Dataset, extracts MFCCs as features, and saves vectors to .h5 file
+  
+ - Usage
+
+   <p>python3 SRData.py -o </p>
+
+ - Requirements
+    - h5py
+    - pickle
+    - numpy
+    - soundfile
+    - tqdm
+    - librosa
+    - matplotlib
+    - scipy
+  <br></br>
+  
+  ## Feature Extraction
  - Raw Samples
    ![alt_text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/AudioWave.png)
  - Frequency Domain
@@ -26,6 +43,21 @@
    
    
 # Training
+  Trains the model
+  
+ - Usage
+
+   <p>python3 SRnn.py</p>
+
+ - Requirements
+    - h5py
+    - pickle
+    - numpy
+    - sklearn
+    - keras
+    - matplotlib
+
+  <br></br>
  - Convolutional Model
   ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/CNNmodel.png "CNN Model")
   ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/AccuracyCNN.png "Training and Validation Accuracy")
@@ -35,8 +67,45 @@
   ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/RNNmodel.png "RNN Model")
   ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/AccuracyRNN.png "Training and Validation Accuracy")
   ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/LossRNN.png "Training and Validation Loss")
-  
+
 # Evaluation
+  Plots a trained model's history (accuracy/loss)
+  
+ - Usage
+
+   <p>python3 SRPlots.py <model_file></p>
+
+ - Requirements
+    - pickle
+    - matplotlib
+  <br></br>
+  
+ - Convolutional Model
+  ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/AccuracyCNN.png "Training and Validation Accuracy")
+  ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/LossCNN.png "Training and Validation Loss")
+  
+ - Recurrent Model (LSTM)
+  ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/AccuracyRNN.png "Training and Validation Accuracy")
+  ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/LossRNN.png "Training and Validation Loss")
+  
+# Demo
+  Runs test demo that allows a user to record a word, extracts the features (MFCCs), uses model to predict the word, uses Google Text To   Speech to play back the model's prediction
+  
+ - Usage
+
+   <p>python3 SRTest.py <model_file></p>
+
+ - Requirements
+    - sounddevice
+    - pickle
+    - numpy
+    - playsound
+    - keras
+    - gtts
+    - tqdm
+    - scipy
+    <br></br>
+    
   ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/Recording.png "Demo Program")
   
 # Presentation
