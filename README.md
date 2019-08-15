@@ -73,7 +73,7 @@
   
  - Usage
 
-   <p>python3 SRPlots.py <model_file></p>
+   <p>python3 SRPlots.py &ltmodel_history_file&gt</p>
 
  - Requirements
     - pickle
@@ -93,7 +93,7 @@
   
  - Usage
 
-   <p>python3 SRTest.py <model_file></p>
+   <p>python3 SRTest.py &ltmodel_file&gt</p>
 
  - Requirements
     - sounddevice
