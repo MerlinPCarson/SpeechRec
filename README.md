@@ -40,6 +40,7 @@
   ![alt text](https://github.com/mpc6/SpeechRec/blob/master/DataVisualizationImages/Recording.png "Demo Program")
   
 # Presentation
+  - [Research Slides](https://docs.google.com/presentation/d/1Y0GeGzcjNZaEwUKqFNz6XXiSq94oDpOGp4fgnUxdDTg/edit?usp=sharing)
   - [Project Slides](https://docs.google.com/presentation/d/1yGEzSyJ9kr97wDnjVuW-BfNnlgVCIJRGiUEYGF7TBjI/edit?usp=sharing)
     
 # Resources
